@@ -2,6 +2,8 @@ package com.github.cichyvx.beginformatter;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
@@ -31,8 +33,9 @@ public class ReformatBeginEndAction extends AnAction {
             return;
         }
 
-        formatter.format(editor.getDocument(), project);
+        Document document = editor.getDocument();
 
+        WriteCommandAction.runWriteCommandAction(project, () -> document.setText(formatter.format(document.getText())));
 
     }
 

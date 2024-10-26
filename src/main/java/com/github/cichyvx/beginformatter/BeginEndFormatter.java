@@ -1,9 +1,5 @@
 package com.github.cichyvx.beginformatter;
 
-import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.project.Project;
-
 import java.util.LinkedList;
 
 public class BeginEndFormatter {
@@ -14,8 +10,8 @@ public class BeginEndFormatter {
     public static final String FIRTS_NO_WHITESPACE_CHARACTER_REGEX = "[^ \t].*";
     public static final String EMPTY = "";
 
-    public void format(Document document, Project project) {
-        String[] lines = document.getText().split(LINE_BREAK);
+    public String format(String text) {
+        String[] lines = text.split(LINE_BREAK);
         StringBuilder content = new StringBuilder();
         LinkedList<String> beginList = new LinkedList<>();
 
@@ -31,7 +27,7 @@ public class BeginEndFormatter {
             content.append(LINE_BREAK);
         }
 
-        WriteCommandAction.runWriteCommandAction(project, () -> document.setText(content));
+        return content.toString();
     }
 
     private void processForEnd(int i, StringBuilder content, String[] lines, LinkedList<String> beginList) {
