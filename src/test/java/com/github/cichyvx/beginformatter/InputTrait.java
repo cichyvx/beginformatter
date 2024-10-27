@@ -186,6 +186,32 @@ public abstract class InputTrait {
             END;
             """;
 
+    private static final String INPUT_TEXT_BETWEEN_WITH_NESTED =
+            """
+            SELECT 1
+            \tBEGIN TRAN
+            \t\tSELECT 1
+            \t\tFROM XXX
+            \t\tWHERE XXX.ID > 3
+            \t\t\tBEGIN
+            \t\t\t\tSELECT 123
+            \t\t\tEND
+            \tEND;
+            """;
+
+    private static final String EXPECTED_TEXT_BETWEEN_WITH_NESTED =
+            """
+            SELECT 1
+            BEGIN TRAN
+            \tSELECT 1
+            \tFROM XXX
+            \tWHERE XXX.ID > 3
+            \tBEGIN
+            \t\tSELECT 123
+            \tEND
+            END;
+            """;
+
 
     public static Stream<Arguments> input() {
         return Stream.of(
@@ -197,7 +223,8 @@ public abstract class InputTrait {
                 Arguments.argumentSet("multiple statements - text after", INPUT_TEXT_MULTIPLE_WITH_TEXT_AFTER, EXPECTED_TEXT_MULTIPLE_WITH_TEXT_AFTER),
                 Arguments.argumentSet("nested statements - happy path", INPUT_TEXT_NEXTED_HAPPY_PATH, EXPECTED_TEXT_NEXTED_HAPPY_PATH),
                 Arguments.argumentSet("nested statements - text after", INPUT_TEXT_NEXTED_WITH_TEXT_AFTER, EXPECTED_TEXT_NEXTED_WITH_TEXT_AFTER),
-                Arguments.argumentSet("text between", INPUT_TEXT_BETWEEN, EXPECTED_TEXT_BETWEEN)
+                Arguments.argumentSet("text between", INPUT_TEXT_BETWEEN, EXPECTED_TEXT_BETWEEN),
+                Arguments.argumentSet("nested text between", INPUT_TEXT_BETWEEN_WITH_NESTED, EXPECTED_TEXT_BETWEEN_WITH_NESTED)
         );
     }
 
