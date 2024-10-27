@@ -1,7 +1,6 @@
 package com.github.cichyvx.beginformatter;
 
 import java.util.LinkedList;
-import java.util.stream.Collectors;
 
 public class BeginEndFormatter {
 
@@ -15,67 +14,65 @@ public class BeginEndFormatter {
 
     public String format(String text) {
         String[] lines = text.split(LINE_BREAK);
-        StringBuilder content = new StringBuilder();
-        LinkedList<String> beginList = new LinkedList<>();
+        StringBuilder refactorResult = new StringBuilder();
+        LinkedList<String> indentationList = new LinkedList<>();
 
         for (int i = 0; i < lines.length; i++) {
-            if (lines[i].contains(BEGIN)) {
-                lines[i] = processForBegin(i, content, lines, beginList);
-            } else if (lines[i].contains(END)) {
-                lines[i] = processForEnd(i, content, lines, beginList);
-            } else {
-                if (lineIsBetweenBeginEnd(beginList)) {
-                    processForBetweenLines(lines, i, beginList);
-                }
-                content.append(lines[i]);
+            if (lineIsBegin(lines[i])) {
+                lines[i] = processForBegin(i, lines, indentationList);
+            } else if (lineIsEnd(lines[i])) {
+                lines[i] = processForEnd(i, lines, indentationList);
+            } else if (lineIsBetweenBeginEnd(indentationList)){
+                lines[i] = processForBetweenLines(lines, i, indentationList);
             }
-
-            content.append(LINE_BREAK);
+            refactorResult.append(lines[i]).append(LINE_BREAK);
         }
 
-        return content.toString();
+        return refactorResult.toString();
     }
 
-    private static void processForBetweenLines(String[] lines, int i, LinkedList<String> beginList) {
-        lines[i] = String.join("", beginList) +
-                TAB +
-                lines[i].replaceAll(WHITESPACES_BEFORE_FIRST_CHARACTER_REGEX, EMPTY);
+    private boolean lineIsBegin(String lines) {
+        return lines.contains(BEGIN);
     }
 
-    private static boolean lineIsBetweenBeginEnd(LinkedList<String> beginList) {
-        return !beginList.isEmpty();
+    private boolean lineIsEnd(String lines) {
+        return lines.contains(END);
     }
 
-    private String processForEnd(int i, StringBuilder content, String[] lines, LinkedList<String> beginList) {
-        String newLine = beginList.getLast() + END + getRestOfStringOrEmpty(lines[i], false);
-        content.append(newLine);
-
-        beginList.removeLast();
-        return newLine;
+    private boolean lineIsBetweenBeginEnd(LinkedList<String> indentationList) {
+        return !indentationList.isEmpty();
     }
 
-    private String processForBegin(int i, StringBuilder content, String[] lines, LinkedList<String> beginList) {
+    private String processForBegin(int i, String[] lines, LinkedList<String> indentationList) {
         if (documentStartWithBegin(i)) {
-            content.append(BEGIN);
-            beginList.add(EMPTY);
+            indentationList.add(EMPTY);
             return BEGIN;
         } else {
-            int previousIndex = i - 1;
-            String strBeforeBegin = lines[previousIndex].replaceAll(FIRST_CHARACTERS_AFTER_WHITESPACES_REGEX, EMPTY);
-            String newLine = strBeforeBegin + BEGIN + getRestOfStringOrEmpty(lines[i], true);
-            content.append(newLine);
-            beginList.add(strBeforeBegin);
+            int previous = i - 1;
+            String indentation = lines[previous].replaceAll(FIRST_CHARACTERS_AFTER_WHITESPACES_REGEX, EMPTY);
+            String newLine = indentation + BEGIN + getRestOfLine(lines[i], true);
+            indentationList.add(indentation);
             return newLine;
         }
     }
 
-    private String getRestOfStringOrEmpty(String line, boolean isBegin) {
-        String[] after = line.split(isBegin ? BEGIN : END);
-        return after.length <= 1 ? EMPTY : after[1];
+    private String processForEnd(int i, String[] lines, LinkedList<String> indentationList) {
+        return indentationList.removeLast() + END + getRestOfLine(lines[i], false);
+    }
+
+    private String processForBetweenLines(String[] lines, int i, LinkedList<String> indentationList) {
+        return String.join(EMPTY, indentationList) +
+                TAB +
+                lines[i].replaceAll(WHITESPACES_BEFORE_FIRST_CHARACTER_REGEX, EMPTY);
     }
 
     private boolean documentStartWithBegin(int i) {
         return i == 0;
+    }
+
+    private String getRestOfLine(String line, boolean isBegin) {
+        String[] after = line.split(isBegin ? BEGIN : END);
+        return after.length <= 1 ? EMPTY : after[1];
     }
 
 }
